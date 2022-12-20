@@ -1,19 +1,34 @@
 import express from 'express'
 import cors from 'cors'
-import mongoose from 'mongoose'
+import mongoose, { ConnectOptions } from 'mongoose'
+import dotenv from 'dotenv'
 
-const PORT = process.env.PORT || 5000 
-const ATLAS_API = process.env.ATLAS_API
+import UserRoutes from './routes/UserRoutes'
 
 const app = express()
 
-app.use(cors());
+dotenv.config()
+
+const ATLAS_API = process.env.ATLAS_API
+const PORT = process.env.PORT || 5000
+
+app.use(cors({
+    origin: "*",
+    credentials: true,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+}));
 app.use(express.json());
+app.use('/', UserRoutes)
 
 if (ATLAS_API) {
-    mongoose.connect(ATLAS_API)
+    mongoose.set("strictQuery", false);
+    mongoose.connect(ATLAS_API, {
+        useNewUrlParser: true,
+    } as ConnectOptions)
     .then(() => app.listen(() => {
-        console.log(`App listening on port ${PORT}`)
+        console.log(`Server running on port: ${PORT}`)
     }))
     .catch((error) => console.log(error.message))
+} else {
+    console.log("Missing atlas API")
 }
